@@ -6,9 +6,11 @@ import SwiftData
 class Item {
     var title: String
     var isCompleted: Bool
-    
-    init(title: String, isCompleted: Bool){
+    var dueDate: Date?
+  
+    init(title: String, isCompleted: Bool,dueDate: Date? = nil){
         self.title = title
         self.isCompleted = isCompleted
+        self.dueDate = dueDate
     }
 }
