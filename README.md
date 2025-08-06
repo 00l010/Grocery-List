@@ -10,6 +10,8 @@ A clean and efficient grocery list application developed using SwiftUI. The app 
 - Custom empty state using ContentUnavailableView  
 - Contextual guidance integrated with TipKit  
 - Enhanced UX using FocusState and safeAreaInset
+- Edit existing grocery items
+- Set due dates for items
 
 ## Technologies Used
 
