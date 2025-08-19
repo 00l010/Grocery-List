@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var editedTitle: String = ""
     @State private var editedDueDate: Date = Date()
     @State private var dueDate: Date? = nil
-
+  @State private var isAddingNewItem = false
   
     @FocusState private var isFocused: Bool
     
@@ -94,6 +94,13 @@ struct ContentView: View {
                         .popoverTip(buttonTip)
                     }
                 }
+              ToolbarItem(placement: .topBarTrailing) {
+                     Button {
+                         isAddingNewItem = true
+                     } label: {
+                         Image(systemName: "plus")
+                     }
+                 }
             }
             .overlay{
                 if items.isEmpty{
@@ -101,6 +108,40 @@ struct ContentView: View {
                                            description: Text("Add some items to the shopping list."))
                 }
             }
+            .sheet(isPresented: $isAddingNewItem) {
+                NavigationStack {
+                    Form {
+                        Section("New Item") {
+                            TextField("Item name", text: $item)
+                            DatePicker(
+                                "Due Date (optional)",
+                                selection: Binding(
+                                    get: { dueDate ?? Date() },
+                                    set: { dueDate = $0 }
+                                ),
+                                displayedComponents: [.date]
+                            )
+                        }
+                        Section {
+                            Button("Save") {
+                                guard !item.isEmpty else { return }
+                                let newItem = Item(title: item, isCompleted: false, dueDate: dueDate)
+                                modelContext.insert(newItem)
+                                item = ""
+                                dueDate = nil
+                                isAddingNewItem = false
+                            }
+                            .disabled(item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                            Button("Cancel", role: .cancel) {
+                                isAddingNewItem = false
+                            }
+                        }
+                    }
+                    .navigationTitle("Add Grocery")
+                }
+            }
+
             .sheet(item: $itemToEdit) { item in
                 NavigationStack {
                     Form {
@@ -121,41 +162,6 @@ struct ContentView: View {
                     }
                     .navigationTitle("Edit Item")
                 }
-            }
-            .safeAreaInset(edge: .bottom){
-                VStack(spacing: 12){
-                    TextField("", text: $item)
-                        .textFieldStyle(.plain)
-                        .padding(12)
-                        .background(.tertiary)
-                        .cornerRadius(12)
-                        .font(.title.weight(.light))
-                        .focused($isFocused)
-                    DatePicker(
-                      "Due Date (optional)",
-                        selection: Binding(
-                          get: { dueDate ?? Date() },
-                          set: { dueDate = $0 }
-                        ),
-                        displayedComponents: [.date]
-                       )
-                    .datePickerStyle(.compact)
-                    .padding(.horizontal)
-
-                    Button("Save"){
-                        guard !item.isEmpty else{
-                            return
-                        }
-                        let newItem = Item(title: item, isCompleted: false,dueDate: dueDate)
-                        modelContext.insert(newItem)
-                        item = ""
-                        dueDate = nil
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-                .padding()
-                .background(.thinMaterial)
             }
         }
     }
