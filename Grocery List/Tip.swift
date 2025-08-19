@@ -3,8 +3,8 @@ import Foundation
 import TipKit
 
 struct ButtonTip: Tip{
-    var title: Text = Text("Essential Foods")
-    var message: Text? = Text("Add some daily items to the shopping list")
-    var image: Image? = Image(systemName: "info.circle")
+  var title: Text = Text("Essential Foods")
+  var message: Text? = Text("Add some daily items to the shopping list")
+  var image: Image? = Image(systemName: "info.circle")
 }
 

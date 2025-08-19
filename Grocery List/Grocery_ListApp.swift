@@ -4,15 +4,15 @@ import SwiftData
 
 @main
 struct Grocery_ListApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .modelContainer(for: Item.self)
-        }
+  var body: some Scene {
+    WindowGroup {
+      ContentView()
+        .modelContainer(for: Item.self)
     }
+  }
 }
 
 #Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+  ContentView()
+    .modelContainer(for: Item.self, inMemory: true)
 }
