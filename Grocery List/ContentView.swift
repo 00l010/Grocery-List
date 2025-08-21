@@ -13,6 +13,11 @@ struct ContentView: View {
   @State private var editedDueDate: Date = Date()
   @State private var dueDate: Date? = nil
   @State private var isAddingNewItem = false
+  @State private var itemPendingDelete: Item? = nil
+  @State private var showDeleteConfirmation = false
+  @State private var showClearAllConfirmation =  false
+  @State private var isSelectionMode = false
+  @State private var selectedItems: Set<Item> = []
   
   @FocusState private var isFocused: Bool
   
@@ -40,23 +45,59 @@ struct ContentView: View {
     modelContext.insert(Item(title: "Pasta and Rices", isCompleted: .random()))
     modelContext.insert(Item(title: "Vegatables", isCompleted: .random()))
   }
+  
   var body: some View {
     NavigationStack{
       List{
-        ForEach(items){item in
-          VStack(alignment: .leading, spacing: 4) {
-            Text(item.title)
-              .font(.title.weight(.light))
-              .foregroundStyle(item.isCompleted == false ? Color.primary:Color.accentColor)
-              .strikethrough(item.isCompleted)
-              .italic(item.isCompleted)
+        ForEach(items, id: \.self){item in
+          HStack {
+            if isSelectionMode {
+              Button {
+                if selectedItems.contains(item) {
+                  selectedItems.remove(item)
+                } else {
+                  selectedItems.insert(item)
+                }
+              } label: {
+                Image(systemName: selectedItems.contains(item) ? "checkmark.circle.fill" : "circle")
+                  .foregroundColor(.blue)
+              }
+            }
             
-            if let due = item.dueDate {
-              Text("Due: \(due.formatted(date: .abbreviated, time: .omitted))")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 4) {
+              Text(item.title)
+                .font(.title.weight(.light))
+                .foregroundStyle(item.isCompleted == false ? Color.primary:Color.accentColor)
+                .strikethrough(item.isCompleted)
+                .italic(item.isCompleted)
+              
+              if let due = item.dueDate {
+                Text("Due: \(due.formatted(date: .abbreviated, time: .omitted))")
+                  .font(.caption)
+                  .foregroundStyle(.secondary)
+              }
+            }
+            Spacer()
+          }
+          .contentShape(Rectangle())
+          .onTapGesture{
+            withAnimation {
+              if isSelectionMode {
+                if selectedItems.contains(item) {
+                  selectedItems.remove(item)
+                } else {
+                  selectedItems.insert(item)
+                }
+              } else {
+                if itemPendingDelete?.id == item.id {
+                  itemPendingDelete = nil
+                } else {
+                  itemPendingDelete = item
+                }
+              }
             }
           }
+          
           .padding(.vertical, 2)
           .swipeActions {
             Button(role: .destructive) {
@@ -82,8 +123,45 @@ struct ContentView: View {
           }
         }
       }
+      .safeAreaInset(edge: .bottom) {
+        if isSelectionMode {
+          HStack {
+            Button(role: .destructive) {
+              for item in selectedItems {
+                modelContext.delete(item)
+              }
+              selectedItems.removeAll()
+              isSelectionMode = false
+            } label: {
+              Label("Delete", systemImage: "trash")
+                .font(.title2)
+            }
+            .padding()
+            
+            Spacer()
+            
+            Button("Cancel") {
+              withAnimation {
+                isSelectionMode = false
+                selectedItems.removeAll()
+              }
+            }
+            .padding()
+          }
+          .frame(maxWidth: .infinity)
+          .background(.thinMaterial)
+        }
+      }
       .navigationTitle("Grocery List")
       .toolbar{
+        ToolbarItem(placement: .topBarLeading) {
+          if !items.isEmpty {
+            Button("Clear All") {
+              showClearAllConfirmation = true
+            }
+          }
+        }
+        
         if items.isEmpty{
           ToolbarItem(placement: .topBarTrailing){
             Button{
@@ -92,6 +170,16 @@ struct ContentView: View {
               Image(systemName: "carrot")
             }
             .popoverTip(buttonTip)
+          }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+          if !items.isEmpty {
+            Button(isSelectionMode ? "Done" : "Select") {
+              withAnimation {
+                isSelectionMode.toggle()
+                if !isSelectionMode { selectedItems.removeAll() }
+              }
+            }
           }
         }
         ToolbarItem(placement: .topBarTrailing) {
@@ -108,6 +196,15 @@ struct ContentView: View {
                                  description: Text("Add some items to the shopping list."))
         }
       }
+      .alert("Clear all items?", isPresented: $showClearAllConfirmation) {
+        Button("Clear All", role: .destructive) {
+          for item in items {
+            modelContext.delete(item)
+          }
+        }
+        Button("Cancel", role: .cancel) { }
+      }
+
       .sheet(isPresented: $isAddingNewItem) {
         NavigationStack {
           Form {
