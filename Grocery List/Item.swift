@@ -10,12 +10,12 @@ class Item: Hashable {
   var dueDate: Date?
   
   static func == (lhs: Item, rhs: Item) -> Bool {
-         lhs.id == rhs.id
-     }
+    lhs.id == rhs.id
+  }
   
   func hash(into hasher: inout Hasher) {
-         hasher.combine(id)
-     }
+    hasher.combine(id)
+  }
   
   init(title: String, isCompleted: Bool,dueDate: Date? = nil){
     self.title = title

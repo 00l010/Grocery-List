@@ -204,7 +204,7 @@ struct ContentView: View {
         }
         Button("Cancel", role: .cancel) { }
       }
-
+      
       .sheet(isPresented: $isAddingNewItem) {
         NavigationStack {
           Form {
